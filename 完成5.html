@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幻の停車駅・きさらぎ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Share+Tech+Mono&display=swap');
+
+body{
+  background:#050505;
+  color:#dcdcdc;
+  font-family:'Share Tech Mono','Noto Serif JP',monospace;
+  overflow:hidden;
+}
+.hidden{display:none}
+
+/* CRT 扫描线 */
+.scanlines{
+  position:fixed; inset:0;
+  pointer-events:none;
+  background:linear-gradient(
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,.25) 50%,
+    rgba(0,0,0,.25)
+  );
+  background-size:100% 4px;
+  z-index:60;
+}
+
+/* 故障文字 */
+.glitch{position:relative;color:#ff3333;}
+.glitch::before,.glitch::after{
+  content:attr(data-text);
+  position:absolute; inset:0;
+}
+.glitch::before{
+  left:2px;text-shadow:-1px 0 red;
+  animation:g1 2s infinite alternate-reverse;
+}
+.glitch::after{
+  left:-2px;text-shadow:1px 0 blue;
+  animation:g2 3s infinite alternate-reverse;
+}
+@keyframes g1{
+  0%{clip-path:inset(20% 0 80% 0)}
+  50%{clip-path:inset(60% 0 10% 0)}
+  100%{clip-path:inset(10% 0 50% 0)}
+}
+@keyframes g2{
+  0%{clip-path:inset(10% 0 60% 0)}
+  50%{clip-path:inset(80% 0 5% 0)}
+  100%{clip-path:inset(30% 0 20% 0)}
+}
+
+/* 红色异常 */
+.red-flash{animation:redFlash 1.4s ease-out forwards;}
+@keyframes redFlash{
+  0%{opacity:0}
+  20%{opacity:.55}
+  60%{opacity:.35}
+  100%{opacity:0}
+}
+
+/* Jump Scare 抖动 */
+@keyframes shake{
+  0%{transform:scale(1)}
+  25%{transform:scale(1.1) translate(-8px,6px)}
+  50%{transform:scale(1.2) translate(8px,-6px)}
+  75%{transform:scale(1.15) translate(-6px,-8px)}
+  100%{transform:scale(1)}
+}
+.shake{animation:shake .25s linear}
+</style>
+</head>
+
+<body class="h-screen w-screen flex items-center justify-center relative">
+
+<div class="scanlines"></div>
+<div id="redOverlay"
+     class="hidden fixed inset-0 bg-red-900 z-40 pointer-events-none"></div>
+
+<!-- 开始 -->
+<div id="screen-start" class="text-center p-6 max-w-md z-10">
+  <h1 class="text-4xl font-bold mb-2 glitch" data-text="きさらぎ駅">きさらぎ駅</h1>
+  <p class="text-sm text-gray-400 mb-8">幻の停車駅</p>
+
+  <div class="border border-red-900 bg-black/50 p-4 mb-6 text-left text-xs text-red-400">
+    <p class="mb-2">【警告】</p>
+    <ul class="list-disc pl-4 space-y-1">
+      <li>心臓の弱い方は体験を控えてください。</li>
+      <li>イヤホンの使用を推奨します。</li>
+      <li>周囲の安全を確保してください。</li>
+    </ul>
+  </div>
+
+  <button onclick="startGame()" class="w-full border border-red-600 py-3">
+    接続開始
+  </button>
+</div>
+
+<!-- 行驶中 -->
+<div id="screen-ride" class="hidden w-full h-full p-6 flex flex-col z-10">
+  <div class="flex justify-between text-xs text-green-500 mb-10">
+    <div class="border border-green-500 px-2 py-1">GPS：作動中</div>
+    <div>速度：285 km/h</div>
+  </div>
+
+  <div class="flex-grow flex flex-col items-center justify-center">
+    <div class="w-64 h-64 border-2 border-green-500/30 rounded-full flex items-center justify-center animate-pulse">
+      <div class="w-1 h-1 bg-green-500 rounded-full"></div>
+    </div>
+    <p class="mt-4 text-sm text-gray-400">
+      次の通過地点：熱海トンネル
+    </p>
+  </div>
+
+  <button onclick="triggerEvent()" class="mt-auto border py-2 text-xs">
+    デバッグ：イベント発生
+  </button>
+</div>
+
+<!-- 异象发生 -->
+<div id="screen-event"
+     class="hidden w-full h-full flex flex-col items-center justify-center bg-black z-20">
+  <h2 class="text-6xl font-bold glitch mb-4" data-text="警告">警告</h2>
+  <p class="text-red-500 text-center mb-8">異常を検知しました</p>
+
+  <div class="w-full h-64 bg-gray-900 border-y-2 border-red-600 flex items-center justify-center relative">
+    <div class="text-red-900 text-9xl opacity-20 font-serif absolute">呪</div>
+    <p class="text-white z-10 p-4 text-center text-sm">
+      「ここは、あなたが来るべき場所ではありません……」
+    </p>
+  </div>
+
+  <button onclick="finishGame()" class="mt-12 border border-red-800 px-6 py-2">
+    脱出
+  </button>
+</div>
+
+<!-- 终点 -->
+<div id="screen-end"
+     class="hidden w-full h-full flex flex-col items-center justify-center z-10">
+  <p class="mb-6 text-center">あなたは終点に到達しました</p>
+
+  <div class="w-full bg-gray-800 p-4 rounded mb-4 text-center">
+    <p class="text-xs text-gray-400 mb-2">報酬を確認しました</p>
+    <p class="text-lg text-yellow-400 font-bold">駅限定クーポン</p>
+  </div>
+
+  <button onclick="showCoupon()" class="bg-red-700 py-3 px-8 text-white">
+    受け取る
+  </button>
+</div>
+
+<!-- 优惠券 -->
+<div id="coupon"
+     class="hidden fixed inset-0 bg-black z-[900] flex flex-col items-center justify-center text-center p-6">
+  <p class="text-xs text-gray-400 mb-4">駅限定クーポン</p>
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=あなたは、まだ……">
+  <p class="text-xs text-gray-500 mt-4">
+    ※ スキャンすると未完の文章が表示されます
+  </p>
+  <button onclick="closeCoupon()" class="mt-6 border px-4 py-1 text-xs">
+    閉じる
+  </button>
+</div>
+
+<!-- Jump Scare（PNG 图片） -->
+<div id="jumpScare"
+     class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+  <img id="ghostImg"
+       src="./ghost.png"
+       alt="幽霊"
+       class="w-screen h-screen object-contain">
+</div>
+
+<script>
+const start=document.getElementById('screen-start');
+const ride=document.getElementById('screen-ride');
+const eventS=document.getElementById('screen-event');
+const end=document.getElementById('screen-end');
+const red=document.getElementById('redOverlay');
+const jump=document.getElementById('jumpScare');
+const ghost=document.getElementById('ghostImg');
+const coupon=document.getElementById('coupon');
+
+function flash(){
+  red.classList.remove('hidden','red-flash');
+  void red.offsetWidth;
+  red.classList.add('red-flash');
+  setTimeout(()=>red.classList.add('hidden'),1400);
+}
+
+function jumpScare(){
+  jump.classList.remove('hidden');
+  ghost.classList.remove('shake');
+  void ghost.offsetWidth;
+  ghost.classList.add('shake');
+  setTimeout(()=>jump.classList.add('hidden'),220);
+}
+
+function startGame(){
+  start.classList.add('hidden');
+  ride.classList.remove('hidden');
+  flash();
+}
+
+function triggerEvent(){
+  ride.classList.add('hidden');
+  eventS.classList.remove('hidden');
+  flash();
+  setTimeout(jumpScare,300);
+}
+
+function finishGame(){
+  eventS.classList.add('hidden');
+  end.classList.remove('hidden');
+}
+
+function showCoupon(){ coupon.classList.remove('hidden'); }
+function closeCoupon(){ coupon.classList.add('hidden'); }
+</script>
+
+</body>
+</html>
