@@ -3,227 +3,326 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>幻の停車駅・きさらぎ</title>
+<title>SHINKANSEN AR: KISARAGI_STATION</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Serif+JP:wght@900&display=swap');
 
-body{
-  background:#050505;
-  color:#dcdcdc;
-  font-family:'Share Tech Mono','Noto Serif JP',monospace;
-  overflow:hidden;
+:root {
+  --blood: #770000;
+  --neon: #ff0000;
 }
-.hidden{display:none}
+
+body {
+  background: #030000;
+  color: var(--neon);
+  font-family: 'Share Tech Mono', 'Noto Serif JP', serif;
+  overflow: hidden;
+  height: 100vh;
+}
 
 /* CRT 扫描线 */
-.scanlines{
-  position:fixed; inset:0;
-  pointer-events:none;
-  background:linear-gradient(
-    rgba(255,255,255,0),
-    rgba(255,255,255,0) 50%,
-    rgba(0,0,0,.25) 50%,
-    rgba(0,0,0,.25)
-  );
-  background-size:100% 4px;
-  z-index:60;
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 0, 0, 0), rgba(255, 0, 0, 0.04));
+  z-index: 1000;
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
 }
 
-/* 故障文字 */
-.glitch{position:relative;color:#ff3333;}
-.glitch::before,.glitch::after{
-  content:attr(data-text);
-  position:absolute; inset:0;
+/* 故障效果 */
+.glitch {
+  position: relative;
+  animation: glitch-anim 0.5s infinite linear alternate-reverse;
 }
-.glitch::before{
-  left:2px;text-shadow:-1px 0 red;
-  animation:g1 2s infinite alternate-reverse;
-}
-.glitch::after{
-  left:-2px;text-shadow:1px 0 blue;
-  animation:g2 3s infinite alternate-reverse;
-}
-@keyframes g1{
-  0%{clip-path:inset(20% 0 80% 0)}
-  50%{clip-path:inset(60% 0 10% 0)}
-  100%{clip-path:inset(10% 0 50% 0)}
-}
-@keyframes g2{
-  0%{clip-path:inset(10% 0 60% 0)}
-  50%{clip-path:inset(80% 0 5% 0)}
-  100%{clip-path:inset(30% 0 20% 0)}
+@keyframes glitch-anim {
+  0% { transform: translate(0); text-shadow: 1px 0 blue; }
+  50% { transform: translate(-2px, 1px); text-shadow: -1px 0 red; }
+  100% { transform: translate(0); }
 }
 
-/* 红色异常 */
-.red-flash{animation:redFlash 1.4s ease-out forwards;}
-@keyframes redFlash{
-  0%{opacity:0}
-  20%{opacity:.55}
-  60%{opacity:.35}
-  100%{opacity:0}
+/* 跳脸层 */
+#scare-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 9999;
+  background: #000;
+  justify-content: center; align-items: center;
+}
+.scare-img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: contrast(400%) grayscale(1);
+  animation: shake 0.04s infinite;
+}
+@keyframes shake {
+  0% { transform: translate(10px, 10px); }
+  50% { transform: translate(-20px, -10px); }
+  100% { transform: translate(10px, 20px); }
 }
 
-/* Jump Scare 抖动 */
-@keyframes shake{
-  0%{transform:scale(1)}
-  25%{transform:scale(1.1) translate(-8px,6px)}
-  50%{transform:scale(1.2) translate(8px,-6px)}
-  75%{transform:scale(1.15) translate(-6px,-8px)}
-  100%{transform:scale(1)}
+.terminal-border {
+  border: 1px solid var(--blood);
+  background: rgba(10, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
 }
-.shake{animation:shake .25s linear}
+
+.btn-horror {
+  border: 1px solid var(--neon);
+  transition: all 0.3s;
+  background: rgba(150, 0, 0, 0.1);
+}
+.btn-horror:hover {
+  background: var(--neon);
+  color: black;
+  box-shadow: 0 0 30px var(--neon);
+}
+
+.hidden { display: none !important; }
+
+/* 解锁时的白光闪烁 */
+.flash-white {
+  animation: flash 0.5s ease-out;
+}
+@keyframes flash {
+  0% { background: #fff; }
+  100% { background: transparent; }
+}
 </style>
 </head>
+<body class="flex flex-col p-6">
 
-<body class="h-screen w-screen flex items-center justify-center relative">
-
-<div class="scanlines"></div>
-<div id="redOverlay"
-     class="hidden fixed inset-0 bg-red-900 z-40 pointer-events-none"></div>
-
-<!-- 开始 -->
-<div id="screen-start" class="text-center p-6 max-w-md z-10">
-  <h1 class="text-4xl font-bold mb-2 glitch" data-text="きさらぎ駅">きさらぎ駅</h1>
-  <p class="text-sm text-gray-400 mb-8">幻の停車駅</p>
-
-  <div class="border border-red-900 bg-black/50 p-4 mb-6 text-left text-xs text-red-400">
-    <p class="mb-2">【警告】</p>
-    <ul class="list-disc pl-4 space-y-1">
-      <li>心臓の弱い方は体験を控えてください。</li>
-      <li>イヤホンの使用を推奨します。</li>
-      <li>周囲の安全を確保してください。</li>
-    </ul>
-  </div>
-
-  <button onclick="startGame()" class="w-full border border-red-600 py-3">
-    接続開始
-  </button>
+<div id="scare-overlay">
+  <img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2000" class="scare-img">
 </div>
 
-<!-- 行驶中 -->
-<div id="screen-ride" class="hidden w-full h-full p-6 flex flex-col z-10">
-  <div class="flex justify-between text-xs text-green-500 mb-10">
-    <div class="border border-green-500 px-2 py-1">GPS：作動中</div>
-    <div>速度：285 km/h</div>
+<!-- Header -->
+<header class="flex justify-between items-center text-[10px] mb-4 border-b border-red-900 pb-2 opacity-60">
+  <div class="flex items-center gap-2">
+    <span class="w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
+    TOKAIDO_SKS_TERMINAL_2026
   </div>
+  <div class="tracking-[0.4em]">東京発 ≫≫≫ 新大阪行</div>
+  <div id="clock">00:00:00</div>
+</header>
 
-  <div class="flex-grow flex flex-col items-center justify-center">
-    <div class="w-64 h-64 border-2 border-green-500/30 rounded-full flex items-center justify-center animate-pulse">
-      <div class="w-1 h-1 bg-green-500 rounded-full"></div>
+<main class="flex-grow grid grid-cols-12 gap-6 overflow-hidden">
+  
+  <!-- LEFT: ROUTE STATUS -->
+  <aside class="col-span-3 flex flex-col gap-4">
+    <div class="terminal-border p-4 flex-grow overflow-y-auto">
+      <h2 class="text-[11px] mb-4 text-red-500 font-bold border-b border-red-900 pb-1">運行状況 (STATUS)</h2>
+      <div id="station-list" class="space-y-5 text-[10px] opacity-30">
+        <div id="st-tokyo">● 東京駅 (出発)</div>
+        <div id="st-atami">○ 熱海 (長大トンネル)</div>
+        <div id="st-shizuoka">○ 静岡 (富士山付近)</div>
+        <div id="st-seki">○ 関ヶ原 (境界通過)</div>
+        <div id="st-kyoto">○ 京都駅 (最終調整)</div>
+        <div id="st-osaka">○ 新大阪 (終着)</div>
+      </div>
     </div>
-    <p class="mt-4 text-sm text-gray-400">
-      次の通過地点：熱海トンネル
-    </p>
-  </div>
+    <div class="terminal-border p-3 text-[8px] text-red-900 italic">
+        ※ 聖地巡礼ミッション遂行中。下車時の忘れ物にご注意ください。
+    </div>
+  </aside>
 
-  <button onclick="triggerEvent()" class="mt-auto border py-2 text-xs">
-    デバッグ：イベント発生
-  </button>
-</div>
+  <!-- CENTER: MAIN AR INTERFACE -->
+  <section class="col-span-6 flex flex-col relative">
+    <div id="main-viewport" class="terminal-border flex-grow flex flex-col items-center justify-center p-10 relative">
+      
+      <!-- STEP 1: START -->
+      <div id="ui-start" class="text-center">
+        <h1 class="text-7xl font-black mb-4 glitch">きさらぎ駅</h1>
+        <p class="text-[10px] tracking-[1em] mb-12 opacity-50">SHINKANSEN AR SYSTEM</p>
+        <button onclick="startJourney()" class="btn-horror px-20 py-5 text-sm font-bold">
+          接続を開始する (CONNECT)
+        </button>
+      </div>
 
-<!-- 异象发生 -->
-<div id="screen-event"
-     class="hidden w-full h-full flex flex-col items-center justify-center bg-black z-20">
-  <h2 class="text-6xl font-bold glitch mb-4" data-text="警告">警告</h2>
-  <p class="text-red-500 text-center mb-8">異常を検知しました</p>
+      <!-- STEP 2: AR PROCESSING -->
+      <div id="ui-ar" class="hidden w-full text-center">
+        <div id="announcement" class="text-2xl font-serif mb-12 h-20 flex items-center justify-center leading-relaxed">
+            GPS信号を待機しています...
+        </div>
+        <div class="relative w-48 h-48 mx-auto">
+            <div class="absolute inset-0 border-4 border-red-900 rounded-full animate-ping opacity-20"></div>
+            <div class="absolute inset-4 border-2 border-red-600 rounded-full animate-pulse flex items-center justify-center">
+                <span class="text-[10px]">SCANNING</span>
+            </div>
+        </div>
+      </div>
 
-  <div class="w-full h-64 bg-gray-900 border-y-2 border-red-600 flex items-center justify-center relative">
-    <div class="text-red-900 text-9xl opacity-20 font-serif absolute">呪</div>
-    <p class="text-white z-10 p-4 text-center text-sm">
-      「ここは、あなたが来るべき場所ではありません……」
-    </p>
-  </div>
+      <!-- STEP 3: PRE-REWARD (UNLOCK BUTTON) -->
+      <div id="ui-arrival" class="hidden text-center">
+        <h2 class="text-4xl font-bold mb-6 glitch text-white">目的地到着</h2>
+        <p class="text-sm mb-12 opacity-80">異界との境界が安定しました。<br>巡礼報酬の封印を解除してください。</p>
+        <button onclick="unlockReward()" class="btn-horror px-12 py-5 text-sm font-bold bg-red-900/30">
+          報酬を解禁する (UNLOCK)
+        </button>
+      </div>
 
-  <button onclick="finishGame()" class="mt-12 border border-red-800 px-6 py-2">
-    脱出
-  </button>
-</div>
+      <!-- STEP 4: FINAL REWARD & REDIRECT -->
+      <div id="ui-reward" class="hidden text-center">
+        <h2 class="text-4xl font-bold mb-4 glitch">巡礼完了報酬</h2>
+        <div class="bg-white p-4 inline-block mb-6 shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+            <img id="qr-img" src="" class="w-44 h-44">
+        </div>
+        <p class="text-[11px] mb-8 text-red-400">
+            デジタル御守と10%割引券を発行しました。<br>
+            下のボタンから公式サイトへ移動し、詳細を確認してください。
+        </p>
+        <button onclick="handleRedirect()" class="btn-horror px-16 py-4 text-sm font-bold bg-red-600 text-black">
+          公式サイトへ移動 (GO TO SITE)
+        </button>
+      </div>
 
-<!-- 终点 -->
-<div id="screen-end"
-     class="hidden w-full h-full flex flex-col items-center justify-center z-10">
-  <p class="mb-6 text-center">あなたは終点に到達しました</p>
+    </div>
+  </section>
 
-  <div class="w-full bg-gray-800 p-4 rounded mb-4 text-center">
-    <p class="text-xs text-gray-400 mb-2">報酬を確認しました</p>
-    <p class="text-lg text-yellow-400 font-bold">駅限定クーポン</p>
-  </div>
+  <!-- RIGHT: TELEMETRY DATA -->
+  <aside class="col-span-3 flex flex-col gap-4">
+    <div class="terminal-border p-4 h-1/2">
+      <h2 class="text-[11px] mb-4 text-red-400 font-bold border-b border-red-900 pb-1">TELEMETRY</h2>
+      <div class="text-5xl font-bold italic mb-2" id="speed">0 <span class="text-xs">km/h</span></div>
+      <div class="text-[9px] opacity-40 space-y-2">
+        <p>LAT: <span id="lat">---</span></p>
+        <p>LNG: <span id="lng">---</span></p>
+        <p>STATUS: <span id="sys-status" class="text-green-600">STANDBY</span></p>
+      </div>
+    </div>
+    <div class="terminal-border p-4 flex-grow overflow-hidden">
+        <h2 class="text-[11px] mb-2 text-red-400 font-bold border-b border-red-900 pb-1">LOG</h2>
+        <div id="log" class="text-[8px] space-y-1 opacity-40 leading-tight">
+          <p>> Initializing Terminal...</p>
+        </div>
+    </div>
+  </aside>
+</main>
 
-  <button onclick="showCoupon()" class="bg-red-700 py-3 px-8 text-white">
-    受け取る
-  </button>
-</div>
-
-<!-- 优惠券 -->
-<div id="coupon"
-     class="hidden fixed inset-0 bg-black z-[900] flex flex-col items-center justify-center text-center p-6">
-  <p class="text-xs text-gray-400 mb-4">駅限定クーポン</p>
-  <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=あなたは、まだ……">
-  <p class="text-xs text-gray-500 mt-4">
-    ※ スキャンすると未完の文章が表示されます
-  </p>
-  <button onclick="closeCoupon()" class="mt-6 border px-4 py-1 text-xs">
-    閉じる
-  </button>
-</div>
-
-<!-- Jump Scare（PNG 图片） -->
-<div id="jumpScare"
-     class="hidden fixed inset-0 z-[9999] flex items-center justify-center bg-white">
-  <img id="ghostImg"
-       src="./ghost.png"
-       alt="幽霊"
-       class="w-screen h-screen object-contain">
-</div>
+<footer class="mt-4 flex justify-between text-[8px] opacity-20 border-t border-red-900 pt-2">
+  <div>ID: KSRG-SYS-2026 | 企画：新幹線ARホラー体験</div>
+  <div>聖地巡礼スポット：新大阪駅コンコース付近</div>
+</footer>
 
 <script>
-const start=document.getElementById('screen-start');
-const ride=document.getElementById('screen-ride');
-const eventS=document.getElementById('screen-event');
-const end=document.getElementById('screen-end');
-const red=document.getElementById('redOverlay');
-const jump=document.getElementById('jumpScare');
-const ghost=document.getElementById('ghostImg');
-const coupon=document.getElementById('coupon');
+// 路线与提示语
+const journeyMap = [
+  { id: 'st-tokyo', name: '東京', msg: '東京を発車しました。', log: 'Journey Start: Tokyo' },
+  { id: 'st-atami', name: '熱海', msg: 'まもなく熱海。トンネルが長く続きます...', log: 'Tunnel Environment Detected' },
+  { id: 'st-shizuoka', name: '静岡', msg: '富士山が見えます。振り返らないでください。', log: 'Scanning Mt.Fuji/Forest Area' },
+  { id: 'st-seki', name: '関ヶ原', msg: '警告：関ヶ原。境界線との干渉が激化しています。', log: 'CRITICAL ERROR: BOUNDARY_INTERFERENCE', scare: true },
+  { id: 'st-kyoto', name: '京都', msg: '次は京都。そこには誰が立っていますか？', log: 'Approaching Kyoto Sanctuary' },
+  { id: 'st-osaka', name: '新大阪', msg: '終点、新大阪。現実界へ戻る準備を。', log: 'Destination Reached.' }
+];
 
-function flash(){
-  red.classList.remove('hidden','red-flash');
-  void red.offsetWidth;
-  red.classList.add('red-flash');
-  setTimeout(()=>red.classList.add('hidden'),1400);
+let audioCtx, drone, gainNode;
+
+function addLog(m) {
+  const l = document.getElementById('log');
+  const p = document.createElement('p');
+  p.innerText = `> ${m}`;
+  l.prepend(p);
 }
 
-function jumpScare(){
-  jump.classList.remove('hidden');
-  ghost.classList.remove('shake');
-  void ghost.offsetWidth;
-  ghost.classList.add('shake');
-  setTimeout(()=>jump.classList.add('hidden'),220);
+function startJourney() {
+  document.getElementById('ui-start').classList.add('hidden');
+  document.getElementById('ui-ar').classList.remove('hidden');
+  document.getElementById('sys-status').innerText = "TRACKING";
+  document.getElementById('sys-status').className = "text-red-600";
+  
+  // 背景音
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  drone = audioCtx.createOscillator();
+  gainNode = audioCtx.createGain();
+  drone.type = 'sine';
+  drone.frequency.setValueAtTime(45, audioCtx.currentTime);
+  gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  drone.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  drone.start();
+
+  runLogic();
 }
 
-function startGame(){
-  start.classList.add('hidden');
-  ride.classList.remove('hidden');
-  flash();
+function runLogic() {
+  let step = 0;
+  const timer = setInterval(() => {
+    if(step < journeyMap.length) {
+      const data = journeyMap[step];
+      document.getElementById('announcement').innerText = data.msg;
+      document.getElementById('announcement').classList.add('glitch');
+      setTimeout(() => document.getElementById('announcement').classList.remove('glitch'), 400);
+      
+      document.getElementById(data.id).classList.replace('opacity-30', 'text-white');
+      addLog(data.log);
+
+      if(data.scare) {
+        setTimeout(triggerScare, 1200);
+      }
+      step++;
+    } else {
+      clearInterval(timer);
+      document.getElementById('ui-ar').classList.add('hidden');
+      document.getElementById('ui-arrival').classList.remove('hidden');
+      addLog("System awaiting reward decryption.");
+    }
+  }, 4500);
 }
 
-function triggerEvent(){
-  ride.classList.add('hidden');
-  eventS.classList.remove('hidden');
-  flash();
-  setTimeout(jumpScare,300);
+function triggerScare() {
+  const overlay = document.getElementById('scare-overlay');
+  overlay.style.display = 'flex';
+  
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.3);
+
+  setTimeout(() => overlay.style.display = 'none', 300);
 }
 
-function finishGame(){
-  eventS.classList.add('hidden');
-  end.classList.remove('hidden');
+// 核心更新：点击按钮解锁二维码
+function unlockReward() {
+  // 视觉反馈
+  const viewport = document.getElementById('main-viewport');
+  viewport.classList.add('flash-white');
+  setTimeout(() => viewport.classList.remove('flash-white'), 500);
+
+  // 界面切换
+  document.getElementById('ui-arrival').classList.add('hidden');
+  document.getElementById('ui-reward').classList.remove('hidden');
+  
+  // 生成QR
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=REWARD_TOKEN_2026_KSRG&color=990000`;
+  document.getElementById('qr-img').src = qrUrl;
+  
+  addLog("Reward decrypted. Redirect available.");
+  gainNode.gain.rampToValueAtTime(0, audioCtx.currentTime + 2);
 }
 
-function showCoupon(){ coupon.classList.remove('hidden'); }
-function closeCoupon(){ coupon.classList.add('hidden'); }
+// 跳转逻辑
+function handleRedirect() {
+  // 企划书指定的活动页或JR领券页
+  const targetUrl = "https://www.westjr.co.jp/global/en/shinkansen/";
+  window.location.href = targetUrl;
+}
+
+// 数据模拟
+setInterval(() => {
+  document.getElementById('clock').innerText = new Date().toLocaleTimeString('ja-JP', {hour12: false});
+  if(document.getElementById('ui-start').classList.contains('hidden')) {
+    const s = 270 + Math.floor(Math.random()*20);
+    document.getElementById('speed').innerHTML = `${s} <span class="text-xs">km/h</span>`;
+    document.getElementById('lat').innerText = (34.7 + Math.random()).toFixed(4);
+    document.getElementById('lng').innerText = (135.2 + Math.random()).toFixed(4);
+  }
+}, 1000);
 </script>
-
 </body>
 </html>
