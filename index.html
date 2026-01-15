@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KISARAGI AR TERMINAL</title>
+<title>SHINKANSEN AR TERMINAL - KSRG</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
@@ -18,12 +18,11 @@ body {
   background: #030000;
   color: var(--neon);
   font-family: 'Share Tech Mono', 'Noto Serif JP', serif;
-  /* 手机端防止拉动刷新和溢出 */
   overscroll-behavior: none;
   overflow-x: hidden;
 }
 
-/* CRT 扫描线 - 手机端也保留氛围感 */
+/* CRT 走査線 */
 .scanlines::after {
   content: " ";
   display: block;
@@ -78,7 +77,6 @@ body {
   box-shadow: 0 0 20px var(--neon);
 }
 
-/* 闪烁效果 */
 .flash-white { animation: flashW 0.4s ease-out; }
 @keyframes flashW { 0% { background: #fff; } 100% { background: transparent; } }
 
@@ -91,7 +89,7 @@ body {
   <img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2000" class="scare-img" alt="scare">
 </div>
 
-<!-- 顶部状态栏：自适应紧凑布局 -->
+<!-- Header -->
 <header class="flex justify-between items-center text-[9px] md:text-[11px] mb-3 md:mb-6 border-b border-red-900 pb-2 opacity-70">
   <div class="flex items-center gap-1 md:gap-2">
     <span class="w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
@@ -101,13 +99,12 @@ body {
   <div id="clock">00:00:00</div>
 </header>
 
-<!-- 主布局：PC端三栏，手机端单栏垂直排列 -->
 <main class="flex-grow flex flex-col lg:grid lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden">
   
-  <!-- 运行状况：PC左侧，手机顶部水平滚动/收纳 -->
+  <!-- Sidebar -->
   <aside class="order-2 lg:order-1 lg:col-span-3 flex flex-col gap-3">
     <div class="terminal-border p-3 md:p-4 flex-grow overflow-y-auto max-h-[150px] lg:max-h-full">
-      <h2 class="text-[10px] md:text-[11px] mb-2 md:mb-4 text-red-500 font-bold border-b border-red-900 pb-1">STATUS</h2>
+      <h2 class="text-[10px] md:text-[11px] mb-2 md:mb-4 text-red-500 font-bold border-b border-red-900 pb-1">運行状況 (STATUS)</h2>
       <div id="station-list" class="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-5 text-[9px] md:text-[10px] opacity-30">
         <div id="st-tokyo">● 東京駅</div>
         <div id="st-atami">○ 熱海</div>
@@ -119,11 +116,11 @@ body {
     </div>
   </aside>
 
-  <!-- 中央主视口：两端核心体验区 -->
+  <!-- Main Viewport -->
   <section class="order-1 lg:order-2 lg:col-span-6 flex flex-col relative min-h-[400px] lg:min-h-0">
     <div id="main-viewport" class="terminal-border flex-grow flex flex-col items-center justify-center p-6 md:p-10 relative overflow-hidden">
       
-      <!-- START -->
+      <!-- UI: START -->
       <div id="ui-start" class="text-center">
         <h1 class="text-4xl md:text-7xl font-black mb-4 glitch">きさらぎ駅</h1>
         <p class="text-[9px] md:text-[10px] tracking-[0.6em] mb-10 opacity-50">SHINKANSEN AR EXPERIENCE</p>
@@ -132,7 +129,7 @@ body {
         </button>
       </div>
 
-      <!-- AR PROCESSING -->
+      <!-- UI: AR PROCESSING -->
       <div id="ui-ar" class="hidden w-full text-center">
         <div id="announcement" class="text-lg md:text-2xl font-serif mb-8 md:mb-12 h-20 flex items-center justify-center leading-snug px-4">
             GPS同期中...
@@ -140,12 +137,12 @@ body {
         <div class="relative w-32 h-32 md:w-48 md:h-48 mx-auto">
             <div class="absolute inset-0 border-2 md:border-4 border-red-900 rounded-full animate-ping opacity-20"></div>
             <div class="absolute inset-2 md:inset-4 border border-red-600 rounded-full animate-pulse flex items-center justify-center">
-                <span class="text-[8px] md:text-[10px]">SCANNING</span>
+                <span id="ar-status-text" class="text-[8px] md:text-[10px]">SCANNING</span>
             </div>
         </div>
       </div>
 
-      <!-- ARRIVAL (UNLOCK BUTTON) -->
+      <!-- UI: ARRIVAL (UNLOCK) -->
       <div id="ui-arrival" class="hidden text-center">
         <h2 class="text-3xl md:text-4xl font-bold mb-4 glitch text-white">目的地到着</h2>
         <p class="text-xs md:text-sm mb-10 opacity-80 px-4">
@@ -156,7 +153,7 @@ body {
         </button>
       </div>
 
-      <!-- REWARD & REDIRECT -->
+      <!-- UI: REWARD & REDIRECT -->
       <div id="ui-reward" class="hidden text-center scale-90 md:scale-100">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 glitch">巡礼完了</h2>
         <div class="bg-white p-2 md:p-4 inline-block mb-4">
@@ -173,7 +170,7 @@ body {
     </div>
   </section>
 
-  <!-- 遥测数据：PC右侧，手机底部水平排列 -->
+  <!-- Telemetry -->
   <aside class="order-3 lg:order-3 lg:col-span-3 flex flex-col gap-3">
     <div class="terminal-border p-3 md:p-4 flex flex-row lg:flex-col justify-between items-center lg:items-start lg:h-1/2">
       <div>
@@ -188,29 +185,26 @@ body {
     <div class="terminal-border p-3 flex-grow overflow-hidden hidden lg:block">
         <h2 class="text-[11px] mb-2 text-red-400 font-bold border-b border-red-900 pb-1">LOG</h2>
         <div id="log" class="text-[8px] space-y-1 opacity-40 leading-tight">
-          <p>> System Ready...</p>
+          <p>> Initializing...</p>
         </div>
     </div>
   </aside>
 </main>
 
-<footer class="mt-3 md:mt-4 flex flex-col sm:flex-row justify-between text-[7px] md:text-[8px] opacity-30 border-t border-red-900 pt-2 gap-1">
-  <div>ID: KSRG-WEB-AR-2026 | 企划：幻の停車駅</div>
-  <div class="text-right">聖地巡礼地：京都・新大阪駅コンコース</div>
-</footer>
-
 <script>
-// 路线提示语
 const journeyMap = [
   { id: 'st-tokyo', name: '東京', msg: '東京を発車しました。', log: 'Departure: Tokyo' },
   { id: 'st-atami', name: '熱海', msg: 'まもなく熱海。トンネルが長く続きます...', log: 'Tunnel Environment detected' },
   { id: 'st-shizuoka', name: '静岡', msg: '富士山が見えます。振り返らないで。', log: 'Scanning Mt.Fuji Area' },
   { id: 'st-seki', name: '関ヶ原', msg: '警告：関ヶ原。境界線が揺らいでいます。', log: 'BOUNDARY_INTERFERENCE', scare: true },
   { id: 'st-kyoto', name: '京都', msg: '次は京都。そこには誰がいますか？', log: 'Approaching Kyoto' },
-  { id: 'st-osaka', name: '新大阪', msg: '終点、新大阪。現実へ戻る準備を。', log: 'Destination Reached' }
+  { id: 'st-osaka', name: '新大阪', msg: '終点、新大阪。現実へ戻る準備を。', log: 'Arriving at Destination' }
 ];
 
 let audioCtx, drone, gainNode;
+let currentSpeed = 0;
+let isJourneyStarted = false;
+let isArriving = false; // 減速フラグ
 
 function addLog(m) {
   const l = document.getElementById('log');
@@ -221,7 +215,6 @@ function addLog(m) {
 }
 
 function startJourney() {
-  // 处理移动端音频锁
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   drone = audioCtx.createOscillator();
   gainNode = audioCtx.createGain();
@@ -234,6 +227,10 @@ function startJourney() {
 
   document.getElementById('ui-start').classList.add('hidden');
   document.getElementById('ui-ar').classList.remove('hidden');
+  
+  isJourneyStarted = true;
+  addLog("System: Shinkansen Motor Initializing...");
+  
   runLogic();
 }
 
@@ -244,9 +241,13 @@ function runLogic() {
       const data = journeyMap[step];
       const ann = document.getElementById('announcement');
       ann.innerText = data.msg;
-      ann.classList.add('glitch');
-      setTimeout(() => ann.classList.remove('glitch'), 400);
       
+      // 最後の駅「新大阪」になったら減速開始
+      if (data.id === 'st-osaka') {
+        isArriving = true;
+        addLog("System: Braking Protocol Activated.");
+      }
+
       const st = document.getElementById(data.id);
       st.classList.replace('opacity-30', 'text-white');
       st.classList.add('font-bold');
@@ -255,17 +256,15 @@ function runLogic() {
       if(data.scare) setTimeout(triggerScare, 1200);
       step++;
     } else {
+      // 这里的逻辑搬迁到速度检测中，当速度为0时显示下一阶段
       clearInterval(timer);
-      document.getElementById('ui-ar').classList.add('hidden');
-      document.getElementById('ui-arrival').classList.remove('hidden');
     }
-  }, 4000); // 每一段约4秒
+  }, 4500);
 }
 
 function triggerScare() {
   const overlay = document.getElementById('scare-overlay');
   overlay.style.display = 'flex';
-  
   if(audioCtx) {
     const osc = audioCtx.createOscillator();
     osc.type = 'sawtooth';
@@ -274,14 +273,19 @@ function triggerScare() {
     osc.start();
     osc.stop(audioCtx.currentTime + 0.3);
   }
-
   setTimeout(() => overlay.style.display = 'none', 300);
+}
+
+// 最终显示到着UI
+function finishJourney() {
+  document.getElementById('ui-ar').classList.add('hidden');
+  document.getElementById('ui-arrival').classList.remove('hidden');
+  addLog("System: Full Stop. Doors opening soon.");
 }
 
 function unlockReward() {
   document.getElementById('main-viewport').classList.add('flash-white');
   setTimeout(() => document.getElementById('main-viewport').classList.remove('flash-white'), 500);
-
   document.getElementById('ui-arrival').classList.add('hidden');
   document.getElementById('ui-reward').classList.remove('hidden');
   
@@ -292,20 +296,48 @@ function unlockReward() {
 }
 
 function handleRedirect() {
-  // 企划书指定的活动 URL
   window.location.href = "https://www.westjr.co.jp/global/en/shinkansen/";
 }
 
-// 模拟数据更新
+// 时间与速度逻辑 (加减速核心)
 setInterval(() => {
   document.getElementById('clock').innerText = new Date().toLocaleTimeString('ja-JP', {hour12: false});
-  if(document.getElementById('ui-start').classList.contains('hidden')) {
-    const s = 270 + Math.floor(Math.random()*20);
-    document.getElementById('speed').innerHTML = `${s} <span class="text-[10px]">km/h</span>`;
-    document.getElementById('lat').innerText = (34.7 + Math.random()).toFixed(4);
-    document.getElementById('lng').innerText = (135.2 + Math.random()).toFixed(4);
+  
+  if(isJourneyStarted) {
+    const speedEl = document.getElementById('speed');
+    
+    if (isArriving) {
+      // --- 減速フェーズ ---
+      if (currentSpeed > 0) {
+        // 速度を下げる (滑らかな減速曲線)
+        currentSpeed -= (currentSpeed / 20) + 0.5; 
+        if (currentSpeed <= 0) {
+          currentSpeed = 0;
+          finishJourney(); // 速度が0になったら到着画面へ
+        }
+      }
+      document.getElementById('ar-status-text').innerText = "STOPPING...";
+    } else {
+      // --- 加速・巡航フェーズ ---
+      if (currentSpeed < 280) {
+        let acceleration = (300 - currentSpeed) / 25;
+        currentSpeed += acceleration + (Math.random() * 2);
+        if (currentSpeed > 280) currentSpeed = 280;
+      } else {
+        currentSpeed = 280 + (Math.random() * 10);
+      }
+    }
+    
+    speedEl.innerHTML = `${Math.floor(currentSpeed)} <span class="text-[10px]">km/h</span>`;
+    
+    // 位置情報の更新 (速度に比例してわずかに動かす)
+    if (currentSpeed > 0) {
+      document.getElementById('lat').innerText = (34.7 + (currentSpeed/10000)).toFixed(4);
+      document.getElementById('lng').innerText = (135.2 + (currentSpeed/8000)).toFixed(4);
+    }
   }
-}, 1000);
+}, 100);
+
 </script>
 </body>
 </html>
